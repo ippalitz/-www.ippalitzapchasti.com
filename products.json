@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sample-1",
+    "title": "Двигатель 9HX для Suzuki SX4 I (2006–2009)",
+    "description": "ДВС без навесного (нет генератора, турбины, маховика, компрессора)",
+    "category": "Двигатели",
+    "brand": "Suzuki",
+    "model": "SX4",
+    "years": "2006-2009",
+    "oem": "9HX",
+    "condition": "б/у",
+    "price_byn": 2500,
+    "qty": 1,
+    "city": "Минск",
+    "seller": "ippalitzapchasti",
+    "image": "https://bamper.by/upload/photos_import/7d7/7d72414889f2555b94850bd00f5fdca5.jpg",
+    "url": "https://bamper.by/zchbu/seller_30-77228-98636-210759-266869/?more=Y",
+    "warranty_days": 14
+  }
+]

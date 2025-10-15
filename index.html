@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ippalitzapchasti — каталог запчастей</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>ippalitzapchasti</h1>
+      <p>Каталог запчастей с поиском и заказом</p>
+    </header>
+    <main>
+      <section id="controls">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Поиск по названию, марке, модели или OEM"
+        />
+        <select id="brandFilter">
+          <option value="">Все марки</option>
+        </select>
+        <select id="categoryFilter">
+          <option value="">Все категории</option>
+        </select>
+        <select id="cityFilter">
+          <option value="">Все города</option>
+        </select>
+        <input
+          type="number"
+          id="rateInput"
+          placeholder="Курс BYN→₽"
+          step="0.01"
+        />
+        <input
+          type="number"
+          id="markupInput"
+          placeholder="Наценка, %"
+          step="1"
+        />
+      </section>
+      <section id="products"></section>
+      <section id="cart">
+        <h2>Корзина</h2>
+        <ul id="cartList"></ul>
+        <button id="tgButton" disabled>Отправить заявку в Telegram</button>
+      </section>
+    </main>
+    <footer>
+      <p>
+        © 2025 ippalitzapchasti. Все права защищены. Для заказа и вопросов
+        пишите в Telegram: <a id="tgLink" href="https://t.me/ippalitzapchasti" target="_blank">@ippalitzapchasti</a>
+      </p>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>

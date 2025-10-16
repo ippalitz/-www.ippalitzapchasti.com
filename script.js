@@ -65,7 +65,7 @@ function renderProducts(list) {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.innerHTML = `
-      <img src="${product.image || ''}" alt="${product.title}" class="product-image">
+      <img src="${product.image || ''}" alt="${product.title}" class="product-image" loading="lazy">
       <div class="product-info">
         <h3>${product.title}</h3>
         <p>${product.description || ''}</p>

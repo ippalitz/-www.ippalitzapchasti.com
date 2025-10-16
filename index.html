@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ippalitzapchasti — каталог запчастей</title>
+  <!-- Описание для поисковых систем -->
+  <meta name="description" content="Каталог автомобильных запчастей ippalitzapchasti с удобным поиском и быстрым оформлением заказа." />
+  <!-- Предзагрузка таблицы стилей для ускорения первой отрисовки -->
+  <link rel="preload" href="styles.css" as="style" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -25,6 +29,7 @@
     <section id="products"></section>
     <section id="cart"></section>
   </main>
-  <script src="script.js"></script>
+  <!-- Подключение основного скрипта с отложенной загрузкой -->
+  <script src="script.js" defer></script>
 </body>
 </html>

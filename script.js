@@ -1,4 +1,4 @@
-const productsUrl = 'products.json';
+const productsUrl = 'motorland_full_catalog.json
 
 const productsSection = document.getElementById('products');
 const cartSection = document.getElementById('cart');

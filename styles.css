@@ -45,7 +45,8 @@ main {
   gap: 1rem;
 }
 
-.product {
+/* Обновлено: используем класс .product-card вместо .product */
+.product-card {
   background-color: #fff;
   border: 1px solid #dee2e6;
   border-radius: 4px;
@@ -55,7 +56,7 @@ main {
   height: 100%;
 }
 
-.product img {
+.product-card img {
   width: 100%;
   height: 160px;
   object-fit: cover;
@@ -63,23 +64,23 @@ main {
   margin-bottom: 0.5rem;
 }
 
-.product h3 {
+.product-card h3 {
   font-size: 1.1rem;
   margin: 0.5rem 0 0.25rem;
 }
 
-.product p {
+.product-card p {
   flex: 1;
   margin: 0.25rem 0;
   font-size: 0.9rem;
 }
 
-.product .price {
+.product-card .price {
   font-weight: bold;
   margin: 0.25rem 0;
 }
 
-.product button {
+.product-card button {
   margin-top: 0.5rem;
   padding: 0.5rem;
   font-size: 0.9rem;
@@ -90,7 +91,7 @@ main {
   cursor: pointer;
 }
 
-.product button:disabled {
+.product-card button:disabled {
   background-color: #adb5bd;
   cursor: default;
 }
@@ -116,21 +117,7 @@ main {
   border-bottom: 1px solid #dee2e6;
 }
 
-#tgButton {
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  background-color: #25a457;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#tgButton:disabled {
-  background-color: #adb5bd;
-  cursor: default;
-}
-
+/* Стили для футера (если будет использоваться) */
 footer {
   text-align: center;
   padding: 1rem;

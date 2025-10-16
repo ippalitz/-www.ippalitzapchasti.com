@@ -1,194 +1,170 @@
-/*
- * Простая логика каталога запчастей для сайта ippalitzapchasti.
- * Считывает данные из products.json, позволяет фильтровать и искать,
- * добавлять товары в корзину и формировать ссылку для отправки
- * заявки в Telegram. Курсовой коэффициент и наценка вводятся
- * пользователем и применяются к цене в BYN для отображения в рублях.
- */
+const productsUrl = 'products.json';
 
-// Глобальные переменные
-let products = [];
-const cart = [];
-
-// Элементы DOM
+const productsSection = document.getElementById('products');
+const cartSection = document.getElementById('cart');
 const searchInput = document.getElementById('searchInput');
 const brandFilter = document.getElementById('brandFilter');
 const categoryFilter = document.getElementById('categoryFilter');
-const cityFilter = document.getElementById('cityFilter');
-const rateInput = document.getElementById('rateInput');
-const markupInput = document.getElementById('markupInput');
-const productsContainer = document.getElementById('products');
-const cartList = document.getElementById('cartList');
-const tgButton = document.getElementById('tgButton');
-const tgLinkElem = document.getElementById('tgLink');
 
-// Загрузка данных товаров
-async function loadProducts() {
-  try {
-    const res = await fetch('products.json');
-    products = await res.json();
-    initFilters();
-    renderProducts();
-  } catch (err) {
-    console.error('Ошибка чтения products.json:', err);
+// Fixed exchange rate from BYN to RUB
+const BYN_TO_RUB_RATE = 30;
+
+let products = [];
+let cart = [];
+
+function formatPrice(byn) {
+  const rub = Math.round(byn * BYN_TO_RUB_RATE);
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 0
+  }).format(rub);
+}
+
+function fetchProducts() {
+  fetch(productsUrl)
+    .then((res) => res.json())
+    .then((data) => {
+      products = data;
+      initFilters(products);
+      renderProducts(products);
+    })
+    .catch((err) => {
+      console.error('Failed to load products', err);
+      productsSection.textContent = 'Не удалось загрузить товары';
+    });
+}
+
+function initFilters(products) {
+  // Populate brand filter
+  const brands = [...new Set(products.map((p) => p.brand))].sort();
+  brands.forEach((brand) => {
+    const option = document.createElement('option');
+    option.value = brand;
+    option.textContent = brand;
+    brandFilter.appendChild(option);
+  });
+
+  // Populate category filter
+  const categories = [...new Set(products.map((p) => p.category))].sort();
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+}
+
+function renderProducts(list) {
+  productsSection.innerHTML = '';
+  if (!list.length) {
+    productsSection.textContent = 'Товары не найдены';
+    return;
   }
-}
-
-// Инициализация значений фильтров на основе данных
-function initFilters() {
-  const brands = new Set();
-  const categories = new Set();
-  const cities = new Set();
-  products.forEach((p) => {
-    if (p.brand) brands.add(p.brand);
-    if (p.category) categories.add(p.category);
-    if (p.city) cities.add(p.city);
-  });
-  addOptions(brandFilter, Array.from(brands));
-  addOptions(categoryFilter, Array.from(categories));
-  addOptions(cityFilter, Array.from(cities));
-}
-
-// Добавление вариантов в выпадающие списки
-function addOptions(select, values) {
-  values.sort().forEach((val) => {
-    const opt = document.createElement('option');
-    opt.value = val;
-    opt.textContent = val;
-    select.appendChild(opt);
+  list.forEach((product) => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <img src="${product.image || ''}" alt="${product.title}" class="product-image">
+      <div class="product-info">
+        <h3>${product.title}</h3>
+        <p>${product.description || ''}</p>
+        <p><strong>${formatPrice(product.price_byn)}</strong></p>
+        <button data-id="${product.id}" class="add-to-cart">Добавить в корзину</button>
+      </div>
+    `;
+    productsSection.appendChild(card);
   });
 }
 
-// Фильтрация и вывод товаров
-function renderProducts() {
-  const query = searchInput.value.trim().toLowerCase();
-  const brandVal = brandFilter.value;
-  const catVal = categoryFilter.value;
-  const cityVal = cityFilter.value;
-  productsContainer.innerHTML = '';
-
+function filterProducts() {
+  const term = searchInput.value.toLowerCase().trim();
+  const brandVal = brandFilter.value.toLowerCase();
+  const categoryVal = categoryFilter.value.toLowerCase();
   const filtered = products.filter((p) => {
-    const matchesSearch =
-      !query ||
-      p.title.toLowerCase().includes(query) ||
-      p.description.toLowerCase().includes(query) ||
-      (p.brand && p.brand.toLowerCase().includes(query)) ||
-      (p.model && p.model.toLowerCase().includes(query)) ||
-      (p.oem && p.oem.toLowerCase().includes(query));
-    const matchesBrand = !brandVal || p.brand === brandVal;
-    const matchesCat = !catVal || p.category === catVal;
-    const matchesCity = !cityVal || p.city === cityVal;
-    return matchesSearch && matchesBrand && matchesCat && matchesCity;
+    if (brandVal && p.brand.toLowerCase() !== brandVal) return false;
+    if (categoryVal && p.category.toLowerCase() !== categoryVal) return false;
+    const fields = [p.title, p.description, p.brand, p.model, p.oem];
+    return fields.some((field) => field && field.toLowerCase().includes(term));
   });
-
-  filtered.forEach((p) => {
-    productsContainer.appendChild(createProductCard(p));
-  });
+  renderProducts(filtered);
 }
 
-// Создание карточки товара
-function createProductCard(prod) {
-  const div = document.createElement('div');
-  div.className = 'product';
-  // Изображение
-  const img = document.createElement('img');
-  if (prod.image) {
-    img.src = prod.image;
-    img.alt = prod.title;
-  } else {
-    img.alt = 'Нет изображения';
-  }
-  div.appendChild(img);
-  // Название
-  const h3 = document.createElement('h3');
-  h3.textContent = prod.title;
-  div.appendChild(h3);
-  // Краткое описание
-  const p = document.createElement('p');
-  p.textContent = prod.description;
-  div.appendChild(p);
-  // Цена
-  const price = document.createElement('div');
-  price.className = 'price';
-  price.textContent = formatPrice(prod.price_byn);
-  div.appendChild(price);
-  // Кнопка добавления
-  const btn = document.createElement('button');
-  btn.textContent = 'Добавить в\u00a0корзину';
-  btn.addEventListener('click', () => addToCart(prod));
-  div.appendChild(btn);
-  return div;
-}
-
-// Форматирование цены с учётом курса и наценки
-function formatPrice(priceByN) {
-  const rate = parseFloat(rateInput.value) || 0;
-  const markup = parseFloat(markupInput.value) || 0;
-  if (!rate) {
-    // если курс не указан, показываем BYN
-    return `${priceByN}\u00a0BYN`;
-  }
-  const rub = priceByN * rate * (1 + markup / 100);
-  return `${Math.round(rub).toLocaleString('ru-RU')}\u00a0₽`;
-}
-
-// Добавление товара в корзину
-function addToCart(prod) {
-  cart.push(prod);
-  updateCart();
-}
-
-// Обновление списка корзины
 function updateCart() {
-  cartList.innerHTML = '';
-  let totalRub = 0;
+  // Ensure cart markup exists
+  if (!cartSection.querySelector('#cartList')) {
+    cartSection.innerHTML = `
+      <h2>Корзина</h2>
+      <ul id="cartList"></ul>
+      <p id="total">Итого: 0 ₽</p>
+      <button id="sendOrder">Оформить заказ</button>
+    `;
+  }
+  const list = cartSection.querySelector('#cartList');
+  const totalElement = cartSection.querySelector('#total');
+  list.innerHTML = '';
+  let totalByn = 0;
   cart.forEach((item) => {
     const li = document.createElement('li');
-    li.textContent = `${item.title}`;
-    const span = document.createElement('span');
-    const priceRub = convertToRub(item.price_byn);
-    totalRub += priceRub;
-    span.textContent = `${priceRub.toLocaleString('ru-RU')}\u00a0₽`;
-    li.appendChild(span);
-    cartList.appendChild(li);
+    li.innerHTML = `
+      ${item.title} × ${item.qty} — ${formatPrice(item.price_byn * item.qty)}
+      <button data-id="${item.id}" class="remove-from-cart">Удалить</button>
+    `;
+    list.appendChild(li);
+    totalByn += item.price_byn * item.qty;
   });
-  // Активируем кнопку Telegram, если корзина не пуста
-  tgButton.disabled = cart.length === 0;
-  tgButton.onclick = () => sendTelegram(totalRub);
+  totalElement.textContent = `Итого: ${formatPrice(totalByn)}`;
+  const sendBtn = cartSection.querySelector('#sendOrder');
+  sendBtn.onclick = sendOrder;
 }
 
-// Конвертация цены в рубли без округления для корзины
-function convertToRub(byn) {
-  const rate = parseFloat(rateInput.value) || 0;
-  const markup = parseFloat(markupInput.value) || 0;
-  return Math.round(byn * rate * (1 + markup / 100));
-}
-
-// Отправка заявки в Telegram
-function sendTelegram(totalRub) {
-  let message = 'Заявка\u00a0с\u00a0сайта\u00a0ippalitzapchasti%0A';
-  cart.forEach((item) => {
-    message += `${item.title} — ${convertToRub(item.price_byn)}₽%0A`;
-  });
-  message += `%0AИтого: ${totalRub}₽`;
-  const handle = tgLinkElem.href.replace('https://t.me/', '');
-  const url = `https://t.me/${handle}?text=${message}`;
-  window.open(url, '_blank');
-}
-
-// Обработчики событий
-searchInput.addEventListener('input', renderProducts);
-brandFilter.addEventListener('change', renderProducts);
-categoryFilter.addEventListener('change', renderProducts);
-cityFilter.addEventListener('change', renderProducts);
-rateInput.addEventListener('input', () => {
-  renderProducts();
+function addToCart(id) {
+  const product = products.find((p) => p.id == id);
+  const existing = cart.find((item) => item.id == id);
+  if (existing) {
+    existing.qty += 1;
+  } else if (product) {
+    cart.push({ ...product, qty: 1 });
+  }
   updateCart();
-});
-markupInput.addEventListener('input', () => {
-  renderProducts();
-  updateCart();
-});
+}
 
-// Первоначальная загрузка
-loadProducts();
+function removeFromCart(id) {
+  cart = cart.filter((item) => item.id != id);
+  updateCart();
+}
+
+function sendOrder() {
+  if (!cart.length) return;
+  const items = cart.map((item) => `${item.title} × ${item.qty}`).join('%0A');
+  const totalByn = cart.reduce((sum, item) => sum + item.price_byn * item.qty, 0);
+  const message = `Здравствуйте, интересуют следующие товары:%0A${items}%0AИтого: ${formatPrice(totalByn)}`;
+  window.open(`https://t.me/ippalitzapchasti?text=${message}`, '_blank');
+}
+
+function handleProductClick(e) {
+  if (e.target.classList.contains('add-to-cart')) {
+    const id = e.target.dataset.id;
+    addToCart(id);
+  }
+}
+
+function handleCartClick(e) {
+  if (e.target.classList.contains('remove-from-cart')) {
+    const id = e.target.dataset.id;
+    removeFromCart(id);
+  }
+}
+
+function initEventListeners() {
+  searchInput.addEventListener('input', filterProducts);
+  brandFilter.addEventListener('change', filterProducts);
+  categoryFilter.addEventListener('change', filterProducts);
+  productsSection.addEventListener('click', handleProductClick);
+  cartSection.addEventListener('click', handleCartClick);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchProducts();
+  initEventListeners();
+});
